@@ -48,7 +48,7 @@ Missing readings are rejected rather than shifted into neighboring wells. Editin
 
 The [calculation notes](docs/TECHNICAL.md) cover fitting bounds, standard recovery, repeat handling, test assumptions, and exports. The [tests](tests) include synthetic recovery checks and numerical fixtures independently calculated with SciPy. This is a research prototype, not a validated assay-analysis package; the next comparison is a real de-identified plate analyzed with the same settings in an established tool.
 
-## Source and dependencies
+## Tech stack
 
 Start with [plate parsing and group statistics](src/analysis.js), [ELISA fitting](src/elisa.js), or [workflow state](src/PlateAnalyzer.jsx). Plots and calibration controls are separate components under `src/`.
 
@@ -56,6 +56,6 @@ React/React DOM power the interface; Chart.js handles plotting; Papa Parse reads
 
 ## Credits and history
 
-Built by **Jennifer Naomi Nguyen** with AI-assisted coding. Claude was a development collaborator on the original prototype; the 1.2.0 revision was developed with Codex through workflow decisions, calculation checks, and iteration with Jennifer. This is a curated source edition derived from the 1.1.0 prototype, not a copy of its private repository history. See the [changelog](CHANGELOG.md).
+Since 2025, I’ve been making software in active collaboration with AI coding systems across providers, and I want to do more of it. I built the original Plate Analyzer with Claude from Anthropic and developed the 1.2.0 revision with Codex from OpenAI, working together on the product workflow, calculations, tests, and interface. See the [changelog](CHANGELOG.md).
 
 The [BioLegend CXCL10/IP-10 protocol](https://www.biolegend.com/Files/Images/media_assets/pro_detail/datasheets/439904_V02_JYH.pdf) was a reference for the ELISA workflow. All bundled readings and screenshots are synthetic; no vendor endorsement is implied. The original [MIT license](LICENSE) is preserved.
