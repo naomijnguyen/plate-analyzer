@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added a dedicated Graphs page and presentation module reusing ResultsChart, with group mean bars, individual sample points, and SD error bars by default.
+- Preserved graph settings and calculated comparisons when switching between Results and Graphs; input edits invalidate both pages.
+- Kept statistical controls on Results and added a comparison table showing p-value, method, groups, statistic, degrees of freedom, and unadjusted status. No statistical calculation logic changed.
+- Added desktop/mobile browser coverage for navigation, graph defaults and settings, result preservation, and comparison invalidation.
+
 ## 1.2.0 - 2026-09-12
 
 Prepared for the first curated public source release, building on the workflow of the 1.1.0 prototype.
