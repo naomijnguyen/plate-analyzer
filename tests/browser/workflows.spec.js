@@ -218,7 +218,7 @@ for (const elisa of [false, true]) {
     await expect.poll(() => canvas.evaluate((c) => c.toDataURL())).not.toBe(withPoints);
     await mode.selectOption("sem");
     await page.getByRole("button", { name: "Back to results", exact: true }).click();
-    await expect(page.locator("table.results")).toHaveText(originalRows);
+    await expect.poll(() => page.locator("table.results").innerText()).toBe(originalRows);
     await tab(page, /Graphs/).click();
     await expect(mode).toHaveValue("sem");
     await expect(points).not.toBeChecked();
