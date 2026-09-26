@@ -399,6 +399,39 @@ table.plate {
   height: 330px;
   padding-top: 12px;
 }
+.graph-workspace {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.graph-settings {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  background: #eaf0ec;
+  border: 1px solid #d7e0db;
+  border-radius: 5px;
+}
+.graph-settings h3,
+.graph-settings p {
+  margin: 0;
+}
+.graph-settings h3 {
+  font-size: 14px;
+}
+.graph-settings p {
+  line-height: 1.6;
+}
+.graph-preview {
+  min-width: 0;
+}
+.graph-preview .plot {
+  height: 440px;
+}
+.graph-preview > .icon-button {
+  margin-top: 12px;
+}
 section > .icon-button {
   margin-top: 8px;
 }
@@ -441,6 +474,12 @@ footer {
   padding: 22px 0;
 }
 @media (max-width: 650px) {
+  .graph-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .graph-preview .plot {
+    height: 340px;
+  }
   main {
     padding: 16px 14px 32px;
   }

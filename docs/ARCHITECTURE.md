@@ -69,3 +69,10 @@ The browser checks exercise the built app rather than the development server, in
 Publish source, docs, the lockfile, license, synthetic screenshot, and tests. Keep private assay files, local inputs, environment files, caches, browser traces, and credentials out of Git. `private: true` in package.json prevents accidental npm publication; it does not make a GitHub repository private.
 
 This source edition starts a new public history. The earlier prototype remains intact elsewhere. A real-plate comparison using matching analysis settings is the next scientific verification step, separate from whether the software installs, runs, and deploys correctly.
+
+
+## Results and graph workspace
+
+`PlateAnalyzer.jsx` owns the analyzed result snapshot, comparison state, and graph settings. Results displays tables, test controls, the heatmap, and well provenance. Graphs is a separate step rendered by `GraphsPage.jsx`, a presentation module that passes precomputed statistics to the existing `ResultsChart.jsx`. Graphs contains its settings, chart preview, current comparison annotation, and PNG export; it does not parse plate readings or calculate statistics.
+
+Both Results and Graphs are disabled until analysis succeeds and become unavailable when inputs change. Moving between them does not run analysis again. Error mode defaults to SD and individual sample points default to visible; settings survive page navigation in the current session. The ELISA calibration curve and diagnostics remain on Results. An ELISA result without grouped samples shows an empty graph state.
