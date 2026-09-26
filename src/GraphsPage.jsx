@@ -25,7 +25,7 @@ export default function GraphsPage({
             <h3 id="graph-settings-heading">Graph settings</h3>
             <label>
               Error bars
-              <select value={errorMode} onChange={(e) => setErrorMode(e.target.value)}>
+              <select aria-label="Error bars" value={errorMode} onChange={(e) => setErrorMode(e.target.value)}>
                 <option value="sd">SD</option>
                 <option value="sem">SEM</option>
                 <option value="none">None</option>
