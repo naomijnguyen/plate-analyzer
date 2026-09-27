@@ -22,8 +22,8 @@ export const whiteBackground = {
 };
 export default function ResultsChart({
   stats,
-  errorMode,
-  showPoints,
+  errorMode = "sd",
+  showPoints = true,
   units,
   annotation = "",
 }) {
@@ -179,7 +179,11 @@ export default function ResultsChart({
           <canvas
             ref={canvas}
             role="img"
-            aria-label={"Group means with " + errorMode + " error bars"}
+            aria-label={
+              "Group means" +
+              (errorMode === "none" ? " without error bars" : " with " + errorMode.toUpperCase() + " error bars") +
+              (showPoints ? " and individual samples" : "")
+            }
           />
         </div>
       </div>

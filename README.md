@@ -11,7 +11,8 @@ I started this as a quick prototype to make plate data easier to work with: map 
 - Keeps plate maps separate from instrument readings, with CSV/TSV map import and editable wells.
 - Fits an increasing-response 4PL standard curve, interpolates unknown samples, and applies dilution factors.
 - Combines technical repeats by sample ID before group comparisons. Each circle represents one sample, not one well.
-- Plots group bars with optional sample circles, SD/SEM error bars, and optional Welch t-test or one-way ANOVA results.
+- Provides a separate **Graphs** page with group mean bars and individual sample points on by default, SD error bars by default, and selectable SEM or no error bars.
+- Keeps descriptive statistics and statistical comparisons on **Results**, including the selected test, groups, p-value, statistic, degrees of freedom, and adjustment status. Calculated comparisons also annotate the graph.
 - Exports well readings, concentrations, curve diagnostics, group summaries, and PNG graphs. Out-of-range samples stay visible and flagged.
 
 Everything runs in the browser. Plate data is not uploaded to an analysis service, and there are no API keys or model calls. Working data is held in memory, so refresh clears it; export results before leaving. The hosting provider still serves the site and handles normal web requests.
@@ -21,6 +22,10 @@ Everything runs in the browser. Plate data is not uploaded to an analysis servic
 Open the [demo](https://naomijnguyen.github.io/plate-analyzer/) or run the app locally, choose **Group comparison** or **ELISA quantification**, and select **Load example**. Both examples are synthetic. The ELISA example includes a diluted sample and an out-of-range sample.
 
 For your own plate, enter or import sample IDs on **Plate map**, then paste the separate 8 x 12 reading grid on **Data**. Technical repeats share an ID. Groups accept lists or ranges such as `S1-S6, S9`. ELISA standard IDs, known concentrations, and sample dilution factors live on **Calibration**. Excel ranges can be pasted or exported as CSV/TSV; native workbook import is not included.
+
+After **Analyze**, **Results** contains the summary tables, statistical comparison controls, heatmap, and contributing wells. Select **Graphs** or **Open graphs** for the dedicated graph workspace and PNG export. Returning to Results preserves both the calculation and graph settings. Editing analysis inputs invalidates both pages until you analyze again; settings persist only for the current browser session.
+
+P-values are not calculated automatically from raw readings: choose the existing Welch unpaired t-test or one-way ANOVA and confirm the assumptions for your experimental design. Technical repeats are averaged first. Until a test runs successfully, Results explicitly says the p-value has not been calculated. ANOVA is an omnibus test, not a set of pairwise comparisons; current p-values have no multiple-comparison adjustment. Paired tests and adjusted post-hoc comparisons are not implemented in this refactor.
 
 ## Run locally
 
@@ -50,7 +55,7 @@ The [calculation notes](docs/TECHNICAL.md) cover fitting bounds, standard recove
 
 ## Tech stack
 
-Start with [plate parsing and group statistics](src/analysis.js), [ELISA fitting](src/elisa.js), or [workflow state](src/PlateAnalyzer.jsx). Plots and calibration controls are separate components under `src/`.
+Start with [plate parsing and group statistics](src/analysis.js), [ELISA fitting](src/elisa.js), or [workflow state](src/PlateAnalyzer.jsx). [GraphsPage](src/GraphsPage.jsx) owns the graph workspace layout and controls; [ResultsChart](src/ResultsChart.jsx) is the reusable plotting module. Both pages consume the same result snapshot from the analysis modules; graph settings never recalculate statistics. Calibration controls remain separate components under `src/`.
 
 React/React DOM power the interface; Chart.js handles plotting; Papa Parse reads CSV/TSV; simple-statistics, jStat, and ml-levenberg-marquardt handle the math; Lucide supplies icons. Vite builds the app, and Playwright checks the browser workflows. Installed versions are recorded in `package-lock.json`. Python is not required to run or test the app.
 

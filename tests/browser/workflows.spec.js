@@ -51,10 +51,6 @@ test("group charts use samples, support tests, and export a graph", async ({
   await expect(
     page.getByLabel("Statistical test", { exact: true }),
   ).toHaveValue("none");
-  for (const mode of ["sem", "none", "sd"])
-    await page.getByLabel("Error bars", { exact: true }).selectOption(mode);
-  await page.getByLabel("Sample circles", { exact: true }).uncheck();
-  await page.getByLabel("Sample circles", { exact: true }).check();
   await page
     .getByLabel("Statistical test", { exact: true })
     .selectOption("welch");
@@ -69,6 +65,12 @@ test("group charts use samples, support tests, and export a graph", async ({
   await page.getByLabel(/Independent samples;/).check();
   await page.getByRole("button", { name: "Calculate comparison" }).click();
   await expect(page.locator("output")).toContainText("ANOVA");
+  const comparison = page.getByRole("table", { name: "Statistical comparison results" });
+  await expect(comparison).toContainText("All groups");
+  await expect(comparison).toContainText("None (unadjusted)");
+  await expect(comparison).toContainText(/p [=<]/);
+  await tab(page, /Graphs/).click();
+  await expect(page.getByLabel("Graph comparison", { exact: true })).toContainText("ANOVA");
   await checkCharts(page);
   const event = page.waitForEvent("download");
   await page
@@ -143,6 +145,7 @@ test("map imports stay separate from readings and edits invalidate results", asy
   await tab(page, /Plate map/).click();
   await page.getByLabel("Sample A1", { exact: true }).fill("UPDATED");
   await expect(tab(page, /Results/)).toBeDisabled();
+  await expect(tab(page, /Graphs/)).toBeDisabled();
   const rows = Array.from({ length: 8 }, () => Array(12).fill(""));
   rows[0][0] = "IMPORTED";
   await page
@@ -172,7 +175,80 @@ test("calibration edits clear concentrations and invalid factors are rejected", 
   await tab(page, /Calibration/).click();
   await page.getByLabel("Dilution S2", { exact: true }).fill("0");
   await expect(tab(page, /Results/)).toBeDisabled();
+  await expect(tab(page, /Graphs/)).toBeDisabled();
   await tab(page, /Data/).click();
   await page.getByRole("button", { name: "Analyze", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("dilution factor");
+});
+
+
+for (const elisa of [false, true]) {
+  test(`${elisa ? "ELISA" : "group"} graphs are separate and preserve settings and results`, async ({ page }) => {
+    await page.goto("./");
+    await expect(tab(page, /Graphs/)).toBeDisabled();
+    await expect(tab(page, /Results/)).toBeDisabled();
+    await example(page, elisa);
+    await expect(tab(page, /Results/)).toHaveAttribute("aria-current", "step");
+    await expect(page.getByRole("button", { name: "Download graph PNG", exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Error bars", { exact: true })).toHaveCount(0);
+    const originalRows = await page.locator("table.results").innerText();
+    await page.getByRole("button", { name: "Open graphs", exact: true }).click();
+    await expect(tab(page, /Graphs/)).toHaveAttribute("aria-current", "step");
+    await expect(page.getByRole("heading", { name: "Graphs", exact: true })).toBeVisible();
+    await expect(page.locator("table.results")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Plate heatmap" })).toHaveCount(0);
+    await expect(page.getByLabel("Statistical test", { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Graph comparison", { exact: true })).toContainText("No comparison calculated");
+    const mode = page.getByLabel("Error bars", { exact: true });
+    const points = page.getByLabel("Individual samples", { exact: true });
+    const canvas = page.getByRole("img", { name: /Group means/ });
+    await expect(mode).toHaveValue("sd");
+    await expect(points).toBeChecked();
+    await checkCharts(page);
+    const sdImage = await canvas.evaluate((c) => c.toDataURL());
+    await mode.selectOption("sem");
+    await expect(canvas).toHaveAttribute("aria-label", "Group means with SEM error bars and individual samples");
+    await expect.poll(() => canvas.evaluate((c) => c.toDataURL())).not.toBe(sdImage);
+    const semImage = await canvas.evaluate((c) => c.toDataURL());
+    await mode.selectOption("none");
+    await expect(canvas).toHaveAttribute("aria-label", "Group means without error bars and individual samples");
+    await expect.poll(() => canvas.evaluate((c) => c.toDataURL())).not.toBe(semImage);
+    const withPoints = await canvas.evaluate((c) => c.toDataURL());
+    await points.uncheck();
+    await expect.poll(() => canvas.evaluate((c) => c.toDataURL())).not.toBe(withPoints);
+    await mode.selectOption("sem");
+    await page.getByRole("button", { name: "Back to results", exact: true }).click();
+    await expect.poll(() => page.locator("table.results").innerText()).toBe(originalRows);
+    await tab(page, /Graphs/).click();
+    await expect(mode).toHaveValue("sem");
+    await expect(points).not.toBeChecked();
+    await expect(canvas).toHaveAttribute("aria-label", "Group means with SEM error bars");
+    await mode.selectOption("sd");
+    await points.check();
+    await checkCharts(page);
+  });
+}
+
+test("changed comparison settings and data clear graph annotations", async ({ page }) => {
+  await example(page);
+  await page.getByLabel("Statistical test", { exact: true }).selectOption("welch");
+  await page.getByLabel(/Independent samples;/).check();
+  await page.getByRole("button", { name: "Calculate comparison" }).click();
+  const comparisonText = await page.locator("output").innerText();
+  await tab(page, /Graphs/).click();
+  await expect(page.getByLabel("Graph comparison", { exact: true })).toContainText("Control vs Treatment");
+  await tab(page, /Results/).click();
+  await expect(page.locator("output")).toHaveText(comparisonText);
+  await page.getByLabel("Second group", { exact: true }).selectOption("2");
+  await expect(page.getByRole("table", { name: "Statistical comparison results" })).toHaveCount(0);
+  await tab(page, /Graphs/).click();
+  await expect(page.getByLabel("Graph comparison", { exact: true })).toContainText("No comparison calculated");
+  await tab(page, /Data/).click();
+  const signal = page.getByLabel("Signal data", { exact: true });
+  await signal.fill((await signal.inputValue()).replace(/^-?[0-9.]+/, "0.5"));
+  await expect(tab(page, /Graphs/)).toBeDisabled();
+  await expect(tab(page, /Results/)).toBeDisabled();
+  await page.getByRole("button", { name: "Analyze", exact: true }).click();
+  await tab(page, /Graphs/).click();
+  await expect(page.getByLabel("Graph comparison", { exact: true })).toContainText("No comparison calculated");
 });

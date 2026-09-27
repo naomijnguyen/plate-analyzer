@@ -18,7 +18,8 @@ import {
   analyzePlate,
   compareGroups,
 } from "./analysis.js";
-import ResultsChart, { COLORS } from "./ResultsChart";
+import { COLORS } from "./ResultsChart";
+import GraphsPage from "./GraphsPage.jsx";
 import { analyzeElisa, standardPreset, fourPL } from "./elisa.js";
 import { Calibration, ElisaResults, downloadCSV } from "./ElisaPanels.jsx";
 import "./style.css";
@@ -361,11 +362,12 @@ export default function PlateAnalyzer() {
           ["groups", "Groups"],
           ["data", "Data"],
           ["results", "Results"],
+          ["graphs", "Graphs"],
         ].map(([key, label], i) => (
           <button
             key={key}
             aria-current={step === key ? "step" : undefined}
-            disabled={key === "results" && !result}
+            disabled={(key === "results" || key === "graphs") && !result}
             onClick={() => {
               setStep(key);
               setError("");
@@ -796,41 +798,12 @@ export default function PlateAnalyzer() {
           </section>
           {result.stats.length > 0 && (
             <section>
-              <div className="section-heading">
-                <h2>
-                  Group comparison
-                  {result.assay.units ? " (" + result.assay.units + ")" : ""}
-                </h2>
-                <div className="actions">
-                  <label>
-                    Error bars
-                    <select
-                      aria-label="Error bars"
-                      value={errorMode}
-                      onChange={(e) => setErrorMode(e.target.value)}
-                    >
-                      <option value="sd">SD</option>
-                      <option value="sem">SEM</option>
-                      <option value="none">None</option>
-                    </select>
-                  </label>
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={showPoints}
-                      onChange={(e) => setShowPoints(e.target.checked)}
-                    />
-                    Sample circles
-                  </label>
-                </div>
-              </div>
-              <ResultsChart
-                stats={result.stats}
-                errorMode={errorMode}
-                showPoints={showPoints}
-                units={result.assay.units}
-                annotation={annotation}
-              />
+              <h2>Statistical comparisons</h2>
+              <p className="muted">
+                Select a test for your experimental design. Comparisons use sample-level
+                values, not individual technical-repeat wells. P-values are unadjusted;
+                ANOVA reports an overall group difference, not pairwise comparisons.
+              </p>
               <div className="test-controls">
                 <label>
                   Statistical test
@@ -897,6 +870,7 @@ export default function PlateAnalyzer() {
                     {testError}
                   </div>
                 )}
+                {!comparison && <p className="muted">P-value not calculated. Select a test and confirm its assumptions.</p>}
                 {comparison && (
                   <output>
                     {annotation} ·{" "}
@@ -904,8 +878,36 @@ export default function PlateAnalyzer() {
                   </output>
                 )}
               </div>
+              {comparison && (
+                <div className="table-scroll">
+                  <table className="numeric" aria-label="Statistical comparison results">
+                    <thead>
+                      <tr>
+                        {["Test", "Comparison", "P-value", "Statistic", "Degrees of freedom", "Adjustment"].map((label) => (
+                          <th scope="col" key={label}>{label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th scope="row">{comparison.method}</th>
+                        <td>{comparison.label}</td>
+                        <td>{pLabel}</td>
+                        <td>{fmt(comparison.statistic)}</td>
+                        <td>{Array.isArray(comparison.df) ? comparison.df.join(", ") : fmt(comparison.df)}</td>
+                        <td>None (unadjusted)</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           )}
+          <footer>
+            <button className="primary" onClick={() => setStep("graphs")}>
+              Open graphs <ArrowRight size={17} />
+            </button>
+          </footer>
           <section>
             <div className="section-heading">
               <h2>Plate heatmap</h2>
@@ -988,6 +990,17 @@ export default function PlateAnalyzer() {
             )}
           </section>
         </>
+      )}
+      {step === "graphs" && result && (
+        <GraphsPage
+          result={result}
+          errorMode={errorMode}
+          setErrorMode={setErrorMode}
+          showPoints={showPoints}
+          setShowPoints={setShowPoints}
+          annotation={annotation}
+          onResults={() => setStep("results")}
+        />
       )}
     </main>
   );
