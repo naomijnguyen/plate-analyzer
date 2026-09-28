@@ -2,7 +2,7 @@
   "name": "plate-analyzer",
   "version": "1.2.0",
   "description": "Browser-based 96-well plate mapping, ELISA quantification, and sample-level group charts.",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/naomijnguyen/plate-analyzer.git"
